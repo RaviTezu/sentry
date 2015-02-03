@@ -21,7 +21,7 @@
   sudo_user: "{{sentry_user}}"
 
 - name: Configure the sentry.conf.py
-  template: src=sentry.conf.py.j2 dest={{sentry_home}}/.sentry/conf.py
+  template: src=sentry.conf.py.j2 dest={{sentry_home}}/.sentry/conf.py 
   register: config
   notify: [sentry restart]
 
@@ -61,7 +61,7 @@
   sudo: yes
 
 - name: Upgrade sentry
-  shell: sentry upgrade
+  shell: /usr/local/bin/sentry upgrade
   sudo_user: "{{sentry_user}}"
   when: config.changed
   sudo: yes
