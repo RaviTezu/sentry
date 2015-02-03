@@ -1,0 +1,12 @@
+---
+# For Installing different packages
+- name: Install the packages
+  apt: pkg={{item}} state=installed update_cache=true
+  with_items: required_packages
+  sudo: yes
+
+# For installing packages via pip
+- name: Install the packages via pip
+  pip: name={{item}}
+  with_items: required_pip_packages
+  sudo: yes

@@ -1,0 +1,23 @@
+---
+# defaults file for sentry
+
+sentry_enabled: yes
+sentry_user: sentry
+sentry_home: /home/sentry
+sentry_setup_dir: /var/www/sentry
+
+# This role assumes you're using postgresql, redis on localhost for Sentry
+sentry_dbname: sentry
+sentry_dbuser: sentry
+sentry_dbuser_password: password
+
+sentry_admin: admin 
+sentry_admin_email: admin@evernym.us
+sentry_admin_password: password
+
+# Required packages(Will be installed via apt)
+required_packages: [ 'python-dev', 'python-pip', 'libpq-dev', 'python-setuptools', 'make', 'python-virtualenv', 'libxml2-dev', 
+                    'libxslt1-dev', 'libevent-dev', 'redis-server','postgresql', 'postgresql-contrib']
+
+# Required packages(Will be installed via pip)                   
+required_pip_packages: ['redis', 'hiredis', 'nydus', 'psycopg2']

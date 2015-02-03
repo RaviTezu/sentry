@@ -1,0 +1,8 @@
+---
+# tasks file for sentry
+- include: packages.yml
+
+- include: sentry.yml
+  when: sentry_enabled
+  tags: [sentry]
+

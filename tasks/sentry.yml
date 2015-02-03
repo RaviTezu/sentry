@@ -1,0 +1,76 @@
+---
+- name: Create sentry user
+  user: name="{{sentry_user}}" home="{{sentry_home}}" groups='sudo' state=present
+
+- name: Create directory for sentry
+  file: state=directory path="{{sentry_setup_dir}}" owner="{{sentry_user}}"
+
+- name: Install sentry[postgres]
+  shell: easy_install -UZ sentry[postgres]
+
+- name: Remove the sentry.conf.py if exists
+  file: name={{sentry_home}}/.sentry/sentry.conf.py state=absent
+  ignore_errors: yes
+
+- name: Initialize sentry
+  shell: sentry init
+  sudo: yes
+  sudo_user: "{{sentry_user}}"
+
+- name: Configure the sentry.conf.py
+  template: src=sentry.conf.py.j2 dest={{sentry_home}}/.sentry/sentry.conf.py
+  register: config
+  notify: [sentry restart]
+
+- name: Install the "adminpack" postgresql db Extention
+  shell: psql -d postgres -c "CREATE EXTENSION adminpack;"
+  sudo: yes
+  sudo_user: postgres
+  ignore_errors: yes
+
+- name: Create Sentry database
+  shell: createdb {{sentry_dbname}}
+  sudo: yes
+  sudo_user: postgres
+  ignore_errors: yes
+
+- name: Set password for sentry user on db
+  shell: psql -d postgres -c "ALTER USER sentry WITH PASSWORD '{{sentry_dbuser_password}}';"
+  sudo: yes
+  sudo_user: postgres
+
+- name: Grant all privileges to sentry_dbuser on sentry_dbname
+  shell: psql -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE sentry to sentry;"
+  sudo: yes
+  sudo_user: postgres 
+
+- name: Deploy the nginx conf file
+  template: src=nginx.conf.j2 dest=/etc/nginx/sites-available/default owner=root mode=0644
+  notify: [nginx restart]
+  sudo: yes
+
+- name: Upgrade sentry
+  shell: sentry upgrade
+  sudo_user: "{{sentry_user}}"
+  when: config.changed
+  sudo: yes
+
+- name: Setup initial data
+  template: src=setup.py.j2 dest={{sentry_home}}/.sentry/setup.py owner={{sentry_user}} mode=0755
+  register: setup
+
+- name: Run setup.py
+  shell: /usr/bin/python setup.py chdir={{sentry_home}}/.sentry
+  when: setup.changed
+  sudo: yes
+  sudo_user: "{{sentry_user}}"
+
+- name: start sentry
+  shell: sentry --config={{sentry_home}}/.sentry/sentry.conf.py start &
+  sudo: yes
+  sudo_user: "{{sentry_user}}"
+
+- name: Start sentry celery
+  shell: sentry celery worker -B &
+  sudo: yes
+  sudo_user: "{{sentry_user}}"

@@ -1,0 +1,7 @@
+---
+# handlers file for sentry
+- name: sentry restart
+  service: name=sentry state=restarted
+  
+- name: nginx restart
+  service: name=nginx state=restarted 
