@@ -1,0 +1,128 @@
+#!/bin/bash
+# /etc/init.d/sentry
+# A debian-compatible sentry startup script
+#
+### BEGIN INIT INFO
+# Provides:          sentry
+# Required-Start:    $remote_fs $syslog $network
+# Required-Stop:     $remote_fs $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start Sentry at boot time
+# Description:       Controls the sentry aggregate logging engine.
+ 
+#
+# Specify some important information
+#
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+DESC="Sentry aggregate logging system"
+NAME=sentry
+SCRIPTNAME=$0
+SETSID=/usr/bin/setsid
+SENTRY=/usr/local/bin/sentry
+SENTRY_CONF={{sentry_home}}/.sentry/conf.py
+SENTRY_LOG=/var/log/sentry.log
+SENTRY_USER={{sentry_user}}
+SU=/bin/su
+ 
+# Include default settings if available
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+ 
+# Ensure the setsid program exists
+[ -x "$SETSID" ] || (echo "setsid package not installed" && exit 0)
+ 
+# Make sure we run as root
+[ `id -u` -ne 0 ] && (echo "The $1 init script can only be run as root" && exit 1)
+ 
+#
+# Check the specified port for availability to bind
+#
+check_port() {
+    local service=$1
+    local assigned=$2
+    local default=$3
+ 
+    if [ -n "$assigned" ]; then
+        port=$assigned
+    else
+        port=$default
+    fi
+ 
+    count=`netstat --listen --numeric-ports | grep \"$port[[:space:]] | grep -c . `
+ 
+    if [ $count -ne 0 ]; then
+        echo "The selected $service port ($port) seems to be in use by another program "
+        echo "Please select another port to use for $NAME"
+        return 1
+    fi
+}
+ 
+#
+# Determines whether or not the service is running
+#
+get_pid() {
+    echo $(ps auxw | grep gunicorn | grep master | grep -oP "^[^0-9]+([0-9]+)" | grep -oP "[0-9]+")
+}
+ 
+#
+# Handles starting the sentry service and ensuring that it started correctly and
+# without problems.
+#
+start() {
+    PID=$(get_pid)
+    [ "$PID" ] && (echo "Sentry is already running" && return 1)
+ 
+    mkdir $(dirname $SENTRY_LOG) > /dev/null 2>&1 || true
+    chown $SENTRY_USER $SENTRY_LOG
+ 
+    $SU -l $SENTRY_USER --shell=/bin/bash -c "$SETSID $SENTRY --config=$SENTRY_CONF start &> $SENTRY_LOG &" || return 2
+    #setsid /srv/sentry/bin/sentry --config=/etc/sentry/sentry.conf.py start &> sentry.log
+}
+ 
+#
+# Handles terminating the sentry service and ensuring that it terminated
+# correctly.
+#
+stop() {
+    PID=$(get_pid)
+    [ "$PID" ] && (kill $PID || return 3)
+}
+ 
+#
+# Determines whether or not the service is running
+#
+status() {
+    PID=$(get_pid)
+    if [ "$PID" ]; then
+        echo "Sentry is running"
+    else
+        echo "Sentry is stopped"
+    fi
+}
+ 
+#
+# Deal with the request
+#
+case "$1" in
+  start)
+    echo "Starting sentry"
+    start
+    ;;
+  stop)
+    echo "Stopping sentry"
+    stop
+    ;;
+  status)
+    status
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|status|restart}"
+    exit 1
+    ;;
+esac
+ 
+exit 0

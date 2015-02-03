@@ -12,21 +12,32 @@
   file: name={{sentry_home}}/.sentry/sentry.conf.py state=absent
   ignore_errors: yes
 
+- name: Create a log for sentry 
+  file: name=/var/log/sentry.log state=touch owner={{sentry_user}} mode=0644
+
 - name: Initialize sentry
   shell: sentry init
   sudo: yes
   sudo_user: "{{sentry_user}}"
 
 - name: Configure the sentry.conf.py
-  template: src=sentry.conf.py.j2 dest={{sentry_home}}/.sentry/sentry.conf.py
+  template: src=sentry.conf.py.j2 dest={{sentry_home}}/.sentry/conf.py
   register: config
   notify: [sentry restart]
+
+- name: Deploy the sentry init script
+  template: src=sentry_init.j2 dest=/etc/init.d/sentry owner=root mode=0755
 
 - name: Install the "adminpack" postgresql db Extention
   shell: psql -d postgres -c "CREATE EXTENSION adminpack;"
   sudo: yes
   sudo_user: postgres
   ignore_errors: yes
+
+- name: Create sentry user in the database
+  postgresql_user: name={{sentry_dbuser}} state=present password={{sentry_dbuser_password}}
+  sudo: yes
+  sudo_user: postgres 
 
 - name: Create Sentry database
   shell: createdb {{sentry_dbname}}
@@ -59,18 +70,16 @@
   template: src=setup.py.j2 dest={{sentry_home}}/.sentry/setup.py owner={{sentry_user}} mode=0755
   register: setup
 
-- name: Run setup.py
-  shell: /usr/bin/python setup.py chdir={{sentry_home}}/.sentry
-  when: setup.changed
-  sudo: yes
-  sudo_user: "{{sentry_user}}"
-
 - name: start sentry
-  shell: sentry --config={{sentry_home}}/.sentry/sentry.conf.py start &
-  sudo: yes
-  sudo_user: "{{sentry_user}}"
+  shell: /etc/init.d/sentry start
 
 - name: Start sentry celery
   shell: sentry celery worker -B &
+  sudo: yes
+  sudo_user: "{{sentry_user}}"
+
+- name: Run setup.py
+  shell: /usr/bin/python setup.py chdir={{sentry_home}}/.sentry
+  when: setup.changed
   sudo: yes
   sudo_user: "{{sentry_user}}"
