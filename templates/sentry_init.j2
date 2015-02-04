@@ -20,7 +20,7 @@ NAME=sentry
 SCRIPTNAME=$0
 SETSID=/usr/bin/setsid
 SENTRY=/usr/local/bin/sentry
-SENTRY_CONF={{sentry_home}}/.sentry/conf.py
+SENTRY_CONF={{sentry_home}}/.sentry/sentry.conf.py
 SENTRY_LOG=/var/log/sentry.log
 SENTRY_USER={{sentry_user}}
 SU=/bin/su
@@ -116,7 +116,9 @@ case "$1" in
     status
     ;;
   restart)
+    echo "Stopping sentry"
     stop
+    echo "Starting sentry"
     start
     ;;
   *)

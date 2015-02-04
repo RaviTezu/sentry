@@ -21,7 +21,7 @@
   sudo_user: "{{sentry_user}}"
 
 - name: Configure the sentry.conf.py
-  template: src=sentry.conf.py.j2 dest={{sentry_home}}/.sentry/conf.py 
+  template: src=sentry.conf.py.j2 dest={{sentry_home}}/.sentry/sentry.conf.py 
   register: config
   notify: [sentry restart]
 
@@ -61,7 +61,7 @@
   sudo: yes
 
 - name: Upgrade sentry
-  shell: /usr/local/bin/sentry upgrade
+  shell: /usr/local/bin/sentry --config={{sentry_home}}/.sentry/sentry.conf.py upgrade
   sudo_user: "{{sentry_user}}"
   when: config.changed
   sudo: yes
@@ -69,15 +69,13 @@
 - name: Deploy the auto_create.sh file
   template: src=auto_create.sh.j2 dest={{sentry_home}}/.sentry/auto_create.sh owner={{sentry_user}} mode=0755
   register: setup
+  notify: [sentry restart]
 
 - name: Create sentry super user
   shell: ./auto_create.sh chdir={{sentry_home}}/.sentry 
-  when: setup.changed
   sudo: yes
   sudo_user: "{{sentry_user}}"
-
-- name: start sentry
-  shell: /etc/init.d/sentry start
+  when: setup.changed
 
 - name: Start sentry celery
   shell: sentry celery worker -B &

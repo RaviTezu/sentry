@@ -2,7 +2,7 @@
 
 set password "{{sentry_admin_password}}"
 
-spawn /usr/local/bin/sentry createsuperuser --username={{sentry_admin}} --email={{sentry_admin_email}}
+spawn /usr/local/bin/sentry --config={{sentry_home}}/.sentry/sentry.conf.py createsuperuser --username={{sentry_admin}} --email={{sentry_admin_email}}
 
 expect "Password:"
 send "$password\r"
