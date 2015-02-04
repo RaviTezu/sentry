@@ -118,6 +118,7 @@ case "$1" in
   restart)
     echo "Stopping sentry"
     stop
+    sleep 2
     echo "Starting sentry"
     start
     ;;
