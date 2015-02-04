@@ -66,20 +66,20 @@
   when: config.changed
   sudo: yes
 
-- name: Setup initial data
-  template: src=setup.py.j2 dest={{sentry_home}}/.sentry/setup.py owner={{sentry_user}} mode=0755
+- name: Deploy the auto_create.sh file
+  template: src=auto_create.sh.j2 dest={{sentry_home}}/.sentry/auto_create.sh owner={{sentry_user}} mode=0755
   register: setup
+
+- name: Create sentry super user
+  shell: ./auto_create.sh chdir={{sentry_home}}/.sentry 
+  when: setup.changed
+  sudo: yes
+  sudo_user: "{{sentry_user}}"
 
 - name: start sentry
   shell: /etc/init.d/sentry start
 
 - name: Start sentry celery
   shell: sentry celery worker -B &
-  sudo: yes
-  sudo_user: "{{sentry_user}}"
-
-- name: Run setup.py
-  shell: /usr/bin/python setup.py chdir={{sentry_home}}/.sentry
-  when: setup.changed
   sudo: yes
   sudo_user: "{{sentry_user}}"

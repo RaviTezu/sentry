@@ -17,7 +17,7 @@ sentry_admin_password: password
 
 # Required packages(Will be installed via apt)
 required_packages: [ 'python-dev', 'python-pip', 'libpq-dev', 'python-setuptools', 'make', 'python-virtualenv', 'libxml2-dev', 
-                    'libxslt1-dev', 'libevent-dev', 'redis-server','postgresql', 'postgresql-contrib']
+                    'libxslt1-dev', 'libevent-dev', 'redis-server','postgresql', 'postgresql-contrib', 'expect']
 
 # Required packages(Will be installed via pip)                   
 required_pip_packages: ['redis', 'hiredis', 'nydus', 'psycopg2']

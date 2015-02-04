@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+
+set password "{{sentry_admin_password}}"
+
+spawn /usr/local/bin/sentry createsuperuser --username={{sentry_admin}} --email={{sentry_admin_email}}
+
+expect "Password:"
+send "$password\r"
+
+expect "Password (again):"
+send "$password\r"
+
+interact 
