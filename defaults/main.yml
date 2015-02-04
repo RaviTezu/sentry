@@ -12,7 +12,7 @@ sentry_dbuser: sentry
 sentry_dbuser_password: password
 
 sentry_admin: admin 
-sentry_admin_email: admin@evernym.us
+sentry_admin_email: admin@example.com
 sentry_admin_password: password
 
 # Required packages(Will be installed via apt)

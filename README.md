@@ -21,7 +21,7 @@ sentry_dbuser: sentry                        # User to be created on that Databa
 sentry_dbuser_password: password             # Password for the above database user. 
 
 sentry_admin: admin                          # User to login to the sentry GUI.
-sentry_admin_email: admin@evernym.us         # Email for the above mentioned user.
+sentry_admin_email: admin@example.com        # Email for the above mentioned user.
 sentry_admin_password: password              # Password for the above mentioned user. 
 
 # Required packages(Will be installed via apt)
